@@ -1,5 +1,6 @@
 import os
 import requests
+from playwright.sync_api import sync_playwright
 
 URL = "https://www.movistararena.com.ar/show/949f1877-625b-479f-893a-1ae09da0f00f"
 
@@ -20,19 +21,26 @@ def telegram(message):
     response.raise_for_status()
 
 
-response = requests.get(
-    URL,
-    headers={
-        "User-Agent": "Mozilla/5.0"
-    },
-    timeout=30
-)
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
 
-response.raise_for_status()
+    page = browser.new_page(
+        user_agent="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
+    )
 
-content = response.text.lower()
+    try:
+        page.goto(URL, wait_until="networkidle", timeout=60000)
+    except Exception:
+        page.goto(URL, wait_until="domcontentloaded", timeout=60000)
 
-# Palabras que pueden indicar que hay entradas disponibles
+    page.wait_for_timeout(5000)
+
+    content = page.locator("body").inner_text().lower()
+
+    browser.close()
+
+
 available_words = [
     "comprar",
     "comprá",
@@ -44,7 +52,6 @@ available_words = [
     "disponibles"
 ]
 
-# Palabras que indican que está agotado
 sold_out_words = [
     "agotado",
     "agotadas",
@@ -53,6 +60,7 @@ sold_out_words = [
 
 available = any(word in content for word in available_words)
 sold_out = any(word in content for word in sold_out_words)
+
 
 if available and not sold_out:
     telegram(
