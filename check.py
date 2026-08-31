@@ -36,40 +36,43 @@ with sync_playwright() as p:
 
     page.wait_for_timeout(5000)
 
+    # Texto visible de la página
     content = page.locator("body").inner_text().lower()
+
+    # Buscamos cada fecha y su estado
+    fechas = ["30 noviembre", "03 diciembre", "04 diciembre"]
+
+    disponibles = []
+
+    for fecha in fechas:
+        if fecha in content:
+            disponibles.append(fecha)
+
+
+    # Palabras que indican que realmente se puede comprar
+    palabras_compra = [
+        "comprar",
+        "comprá",
+        "seleccionar entradas",
+        "seleccionar sector"
+    ]
+
+    # Si aparece un estado de compra y no todos los eventos están agotados,
+    # consideramos que puede haber disponibilidad.
+    hay_opcion_compra = any(
+        palabra in content for palabra in palabras_compra
+    )
+
+    agotados = content.count("agotado")
 
     browser.close()
 
 
-# Estados que indican que puede haber entradas
-available_words = [
-    "comprar",
-    "comprá",
-    "seleccionar entradas",
-    "seleccionar sector",
-    "disponible",
-    "disponibles",
-    "entradas disponibles"
-]
-
-# Estados que indican que no hay entradas
-sold_out_words = [
-    "agotado",
-    "agotadas",
-    "sold out"
-]
-
-
-# Buscamos los estados dentro del contenido de la página
-has_available = any(word in content for word in available_words)
-has_sold_out = any(word in content for word in sold_out_words)
-
-
-# Solo avisar si hay indicios de disponibilidad
-# y NO aparece ningún estado de agotado.
-if has_available and not has_sold_out:
+# Avisamos solamente si aparece una opción clara de compra
+# y no están todas las fechas agotadas.
+if hay_opcion_compra and agotados < len(disponibles):
     telegram(
         "🚨 ¡ENTRADAS DISPONIBLES!\n\n"
-        "Puede haber entradas disponibles para el show de Omar Courtz.\n\n"
+        "Se detectó una fecha que podría tener entradas disponibles.\n\n"
         f"{URL}"
     )
