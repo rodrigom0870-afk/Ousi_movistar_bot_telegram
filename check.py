@@ -1,14 +1,14 @@
 import os
 import requests
-import hashlib
 
 URL = "https://www.movistararena.com.ar/show/949f1877-625b-479f-893a-1ae09da0f00f"
 
 TOKEN = os.environ["TELEGRAM_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
+
 def telegram(message):
-    requests.post(
+    response = requests.post(
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
         data={
             "chat_id": CHAT_ID,
@@ -17,6 +17,8 @@ def telegram(message):
         },
         timeout=20
     )
+    response.raise_for_status()
+
 
 response = requests.get(
     URL,
@@ -30,14 +32,19 @@ response.raise_for_status()
 
 content = response.text.lower()
 
-# Buscamos indicios de disponibilidad
+# Palabras que pueden indicar que hay entradas disponibles
 available_words = [
     "comprar",
+    "comprá",
     "seleccionar entradas",
     "seleccionar sector",
-    "disponible"
+    "tickets",
+    "entradas disponibles",
+    "disponible",
+    "disponibles"
 ]
 
+# Palabras que indican que está agotado
 sold_out_words = [
     "agotado",
     "agotadas",
@@ -53,5 +60,3 @@ if available and not sold_out:
         "Puede haber entradas disponibles para el show.\n\n"
         f"{URL}"
     )
-telegram("✅ Prueba del bot: Telegram funciona correctamente.")
-
