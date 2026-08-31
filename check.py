@@ -52,5 +52,6 @@ if available and not sold_out:
         "🚨 ¡ATENCIÓN!\n\n"
         "Puede haber entradas disponibles para el show.\n\n"
         f"{URL}"
-        telegram("✅ Prueba del bot: Telegram funciona correctamente.")
     )
+telegram("✅ Prueba del bot: Telegram funciona correctamente.")
+
