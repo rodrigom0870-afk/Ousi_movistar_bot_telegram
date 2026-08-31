@@ -36,35 +36,10 @@ with sync_playwright() as p:
 
     page.wait_for_timeout(5000)
 
-    content = page.locator("body").inner_text().lower()
+    content = page.locator("body").inner_text()
+
+    print("========== TEXTO QUE VE EL BOT ==========")
+    print(content)
+    print("========== FIN DEL TEXTO ==========")
 
     browser.close()
-
-
-available_words = [
-    "comprar",
-    "comprá",
-    "seleccionar entradas",
-    "seleccionar sector",
-    "tickets",
-    "entradas disponibles",
-    "disponible",
-    "disponibles"
-]
-
-sold_out_words = [
-    "agotado",
-    "agotadas",
-    "sold out"
-]
-
-available = any(word in content for word in available_words)
-sold_out = any(word in content for word in sold_out_words)
-
-
-if available and not sold_out:
-    telegram(
-        "🚨 ¡ATENCIÓN!\n\n"
-        "Puede haber entradas disponibles para el show.\n\n"
-        f"{URL}"
-    )
