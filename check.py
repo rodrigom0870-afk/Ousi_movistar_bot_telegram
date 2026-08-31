@@ -36,10 +36,40 @@ with sync_playwright() as p:
 
     page.wait_for_timeout(5000)
 
-    content = page.locator("body").inner_text()
-
-    print("========== TEXTO QUE VE EL BOT ==========")
-    print(content)
-    print("========== FIN DEL TEXTO ==========")
+    content = page.locator("body").inner_text().lower()
 
     browser.close()
+
+
+# Estados que indican que puede haber entradas
+available_words = [
+    "comprar",
+    "comprá",
+    "seleccionar entradas",
+    "seleccionar sector",
+    "disponible",
+    "disponibles",
+    "entradas disponibles"
+]
+
+# Estados que indican que no hay entradas
+sold_out_words = [
+    "agotado",
+    "agotadas",
+    "sold out"
+]
+
+
+# Buscamos los estados dentro del contenido de la página
+has_available = any(word in content for word in available_words)
+has_sold_out = any(word in content for word in sold_out_words)
+
+
+# Solo avisar si hay indicios de disponibilidad
+# y NO aparece ningún estado de agotado.
+if has_available and not has_sold_out:
+    telegram(
+        "🚨 ¡ENTRADAS DISPONIBLES!\n\n"
+        "Puede haber entradas disponibles para el show de Omar Courtz.\n\n"
+        f"{URL}"
+    )
