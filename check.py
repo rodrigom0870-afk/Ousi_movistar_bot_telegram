@@ -34,7 +34,8 @@ content = response.text.lower()
 available_words = [
     "comprar",
     "seleccionar entradas",
-    "seleccionar sector"
+    "seleccionar sector",
+    "disponible"
 ]
 
 sold_out_words = [
@@ -51,4 +52,5 @@ if available and not sold_out:
         "🚨 ¡ATENCIÓN!\n\n"
         "Puede haber entradas disponibles para el show.\n\n"
         f"{URL}"
+        telegram("✅ Prueba del bot: Telegram funciona correctamente.")
     )
