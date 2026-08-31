@@ -24,8 +24,15 @@ jobs:
           playwright install chromium
           playwright install-deps chromium
 
-      - name: Ejecutar bot
+      - name: Procesar mensajes de Telegram
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+        run: python bot.py
+
+      - name: Revisar entradas
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
         run: python check.py
