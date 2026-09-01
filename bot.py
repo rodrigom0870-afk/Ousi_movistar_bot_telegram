@@ -35,7 +35,7 @@ def guardar_usuarios(usuarios):
         json={
             "files": {
                 "users.json": {
-                    "content": json.dumps(usuarios)
+                    "content": json.dumps(usuarios, indent=2)
                 }
             }
         },
@@ -44,11 +44,27 @@ def guardar_usuarios(usuarios):
     r.raise_for_status()
 
 
+def enviar(chat_id, texto):
+    r = requests.post(
+        f"{API}/sendMessage",
+        data={
+            "chat_id": chat_id,
+            "text": texto
+        },
+        timeout=20
+    )
+    r.raise_for_status()
+
+
 usuarios = obtener_usuarios()
 
+# Obtener todos los mensajes pendientes
 r = requests.get(
     f"{API}/getUpdates",
-    params={"timeout": 1},
+    params={
+        "timeout": 1,
+        "allowed_updates": '["message"]'
+    },
     timeout=10
 )
 
@@ -56,7 +72,11 @@ r.raise_for_status()
 
 updates = r.json().get("result", [])
 
+ultimo_update = None
+
 for update in updates:
+    ultimo_update = update["update_id"]
+
     message = update.get("message", {})
     texto = message.get("text", "").lower().strip()
     chat_id = str(message.get("chat", {}).get("id", ""))
@@ -69,14 +89,10 @@ for update in updates:
             usuarios.append(chat_id)
             guardar_usuarios(usuarios)
 
-        requests.post(
-            f"{API}/sendMessage",
-            data={
-                "chat_id": chat_id,
-                "text": "✅ Te registraste correctamente.\n\n"
-                        "Recibirás una alerta cuando se detecten entradas."
-            },
-            timeout=20
+        enviar(
+            chat_id,
+            "✅ Te registraste correctamente.\n\n"
+            "Recibirás alertas cuando se detecten entradas disponibles."
         )
 
     elif texto == "/stop":
@@ -84,11 +100,19 @@ for update in updates:
             usuarios.remove(chat_id)
             guardar_usuarios(usuarios)
 
-        requests.post(
-            f"{API}/sendMessage",
-            data={
-                "chat_id": chat_id,
-                "text": "🛑 Dejaste de recibir alertas."
-            },
-            timeout=20
+        enviar(
+            chat_id,
+            "🛑 Dejaste de recibir alertas."
         )
+
+
+# Confirmamos a Telegram que ya procesamos esos mensajes
+if ultimo_update is not None:
+    requests.get(
+        f"{API}/getUpdates",
+        params={
+            "offset": ultimo_update + 1,
+            "timeout": 1
+        },
+        timeout=10
+    )
