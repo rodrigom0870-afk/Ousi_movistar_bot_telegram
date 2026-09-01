@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: "*/5 * * * *"
 
+concurrency:
+  group: movistar-bot
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
