@@ -58,24 +58,27 @@ def enviar(chat_id, texto):
 
 usuarios = obtener_usuarios()
 
-# Obtener todos los mensajes pendientes
+# Leer mensajes pendientes de Telegram
 r = requests.get(
     f"{API}/getUpdates",
     params={
         "timeout": 1,
-        "allowed_updates": '["message"]'
+        "allowed_updates": json.dumps(["message"])
     },
     timeout=10
 )
+
+# Si Telegram indica que hay otra instancia conectada,
+# simplemente terminamos esta ejecución.
+if r.status_code == 409:
+    print("Telegram está siendo utilizado por otra ejecución.")
+    exit(0)
 
 r.raise_for_status()
 
 updates = r.json().get("result", [])
 
-ultimo_update = None
-
 for update in updates:
-    ultimo_update = update["update_id"]
 
     message = update.get("message", {})
     texto = message.get("text", "").lower().strip()
@@ -85,6 +88,7 @@ for update in updates:
         continue
 
     if texto == "/start":
+
         if chat_id not in usuarios:
             usuarios.append(chat_id)
             guardar_usuarios(usuarios)
@@ -96,6 +100,7 @@ for update in updates:
         )
 
     elif texto == "/stop":
+
         if chat_id in usuarios:
             usuarios.remove(chat_id)
             guardar_usuarios(usuarios)
@@ -105,14 +110,5 @@ for update in updates:
             "🛑 Dejaste de recibir alertas."
         )
 
-
-# Confirmamos a Telegram que ya procesamos esos mensajes
-if ultimo_update is not None:
-    requests.get(
-        f"{API}/getUpdates",
-        params={
-            "offset": ultimo_update + 1,
-            "timeout": 1
-        },
-        timeout=10
-    )
+print(f"Mensajes procesados: {len(updates)}")
+print(f"Usuarios registrados: {len(usuarios)}")
