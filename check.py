@@ -52,6 +52,7 @@ with sync_playwright() as p:
     # Palabras que indican que realmente se puede comprar
     palabras_compra = [
         "comprar",
+        "disponible",
         "comprá",
         "seleccionar entradas",
         "seleccionar sector"
